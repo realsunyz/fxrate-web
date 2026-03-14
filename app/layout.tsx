@@ -10,15 +10,6 @@ import { Footer } from "@/components/footer";
 import { NavBar } from "@/components/navbar";
 import { ThemeSync } from "@/components/theme-sync";
 
-const rawCaptchaProvider =
-  (process.env.NEXT_PUBLIC_CAPTCHA_PROVIDER ?? "turnstile").toLowerCase();
-const captchaProvider =
-  rawCaptchaProvider === "recaptcha" ? "recaptcha" : "turnstile";
-const recaptchaSiteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "";
-const recaptchaScriptSrc = recaptchaSiteKey
-  ? `https://www.recaptcha.net/recaptcha/api.js?render=${recaptchaSiteKey}`
-  : "https://www.recaptcha.net/recaptcha/api.js";
-
 const PingFangSC = localFont({
   src: [
     {
@@ -74,15 +65,11 @@ export default function RootLayout({
     <html lang="zh-Hans" suppressHydrationWarning>
       <head>
         <Script src="https://cdn.sunyz.net/assets/fxrate/themeScript.js" />
-        {captchaProvider === "recaptcha" ? (
-          <script src={recaptchaScriptSrc} async defer></script>
-        ) : (
-          <script
-            src="https://challenges.cloudflare.com/turnstile/v0/api.js"
-            async
-            defer
-          ></script>
-        )}
+        <script
+          src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+          async
+          defer
+        ></script>
       </head>
       <body className={cn("bg-background antialiased", PingFangSC)}>
         <I18nProvider>

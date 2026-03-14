@@ -11,10 +11,7 @@ import { SelectCurrency } from "@/components/select-currency";
 import useFetchRates, { CurrencyData, Currencies } from "@/components/fetch";
 import { useI18n, tBankName } from "@/lib/i18n";
 import CaptchaWidget from "@/components/captcha-widget";
-import {
-  AUTH_RECAPTCHA_PATH,
-  AUTH_TURNSTILE_PATH,
-} from "@/lib/api";
+import { AUTH_TURNSTILE_PATH } from "@/lib/api";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Checkbox } from "@/components/animate-ui/components/radix/checkbox";
@@ -203,15 +200,8 @@ export function CurrencyTable() {
 
   const columns = columnsFactory(t);
 
-  const rawProvider = (process.env.NEXT_PUBLIC_CAPTCHA_PROVIDER ?? "turnstile").toLowerCase();
-  const captchaProvider: "turnstile" | "recaptcha" =
-    rawProvider === "recaptcha" ? "recaptcha" : "turnstile";
-  const tokenField =
-    captchaProvider === "recaptcha" ? "recaptcha-token" : "turnstile-token";
-  const captchaAuthPath =
-    captchaProvider === "recaptcha"
-      ? AUTH_RECAPTCHA_PATH
-      : AUTH_TURNSTILE_PATH;
+  const tokenField = "turnstile-token";
+  const captchaAuthPath = AUTH_TURNSTILE_PATH;
 
   const onVerifyCaptcha = useCallback(
     async (tk: string) => {
