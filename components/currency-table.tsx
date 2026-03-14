@@ -115,11 +115,12 @@ export function CurrencyTable() {
     cachedStateRef.current?.consentChecked ?? false,
   );
   const [authError, setAuthError] = useState<string | null>(null);
+  const handleAuthExpired = useCallback(() => {
+    setAuthenticated(false);
+    setAuthError("Token Expired (ERR-T101)");
+  }, []);
   const { rates, error, loading, refresh } = useFetchRates(fromcurrency, "CNY", authenticated, {
-    onAuthExpired: () => {
-      setAuthenticated(false);
-      setAuthError("Token Expired (ERR-T101)");
-    },
+    onAuthExpired: handleAuthExpired,
     initialRates: cachedStateRef.current?.rates,
     preserveInitialData: Boolean(cachedStateRef.current?.rates?.length),
   });
