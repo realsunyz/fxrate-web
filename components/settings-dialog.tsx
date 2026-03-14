@@ -12,22 +12,17 @@ import {
   DialogDescription,
 } from "@/components/animate-ui/components/radix/dialog";
 import { useI18n } from "@/lib/i18n";
-import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 
 export function SettingsDialog() {
   const { t, locale, setLocale } = useI18n();
-  const { resolvedTheme, setTheme } = useTheme();
   const [open, setOpen] = React.useState(false);
-  const [mounted, setMounted] = React.useState(false);
-
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const nextLocale = locale === "zh" ? "en" : "zh";
   const languageButtonLabel = t("settings.switchLanguage");
-  const [languageIconState, setLanguageIconState] = React.useState<"language" | "success">("language");
+  const [languageIconState, setLanguageIconState] = React.useState<"language" | "success">(
+    "language",
+  );
   const languageIconTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleToggleLanguage = () => {
@@ -41,14 +36,6 @@ export function SettingsDialog() {
       setLanguageIconState("language");
       languageIconTimeoutRef.current = null;
     }, 900);
-  };
-
-  const effectiveTheme = mounted ? resolvedTheme : undefined;
-  const isDark = effectiveTheme === "dark";
-  const themeButtonLabel = isDark ? t("settings.themeToLight") : t("settings.themeToDark");
-  const handleToggleTheme = () => {
-    if (!mounted) return;
-    setTheme(isDark ? "light" : "dark");
   };
 
   React.useEffect(() => {
@@ -78,9 +65,7 @@ export function SettingsDialog() {
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <div className="text-sm font-medium mb-2">
-              {t("help.info.title")}
-            </div>
+            <div className="text-sm font-medium mb-2">{t("help.info.title")}</div>
             <ul className="text-sm list-disc pl-5 space-y-1">
               <li>{t("help.info.line1")}</li>
               <li>{t("help.info.line2")}</li>
@@ -88,9 +73,7 @@ export function SettingsDialog() {
             </ul>
           </div>
           <div>
-            <div className="text-sm font-medium mb-2">
-              {t("settings.preferences")}
-            </div>
+            <div className="text-sm font-medium mb-2">{t("settings.preferences")}</div>
             <div className="flex flex-wrap gap-2">
               <Button
                 variant="outline"
@@ -104,7 +87,7 @@ export function SettingsDialog() {
                       "absolute inset-0 flex items-center justify-center transition-all duration-200 ease-out",
                       languageIconState === "language"
                         ? "opacity-100 translate-y-0"
-                        : "opacity-0 -translate-y-1"
+                        : "opacity-0 -translate-y-1",
                     )}
                   >
                     <Languages className="h-4 w-4" />
@@ -114,15 +97,13 @@ export function SettingsDialog() {
                       "absolute inset-0 flex items-center justify-center transition-all duration-200 ease-out",
                       languageIconState === "success"
                         ? "opacity-100 translate-y-0"
-                        : "opacity-0 translate-y-1"
+                        : "opacity-0 translate-y-1",
                     )}
                   >
                     <Check className="h-4 w-4 text-emerald-500" />
                   </span>
                 </span>
-                <span className="flex items-center whitespace-nowrap">
-                  {languageButtonLabel}
-                </span>
+                <span className="flex items-center whitespace-nowrap">{languageButtonLabel}</span>
               </Button>
             </div>
           </div>

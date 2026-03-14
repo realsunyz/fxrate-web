@@ -3,7 +3,13 @@
 @tailwind utilities;
 
 body {
-  font-family: "PingFang SC", -apple-system, "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+  font-family:
+    "PingFang SC",
+    -apple-system,
+    "Helvetica Neue",
+    "Helvetica",
+    "Arial",
+    sans-serif;
 }
 
 @layer base {

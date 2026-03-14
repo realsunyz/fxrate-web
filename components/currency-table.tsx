@@ -26,10 +26,7 @@ export const columnsFactory = (t: ReturnType<typeof useI18n>["t"]): ColumnDef<Cu
   {
     accessorKey: "sellRemit",
     header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      >
+      <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
         {t("columns.sellRemit")}
         <ArrowUpDown className="h-4 w-4" />
       </Button>
@@ -42,10 +39,7 @@ export const columnsFactory = (t: ReturnType<typeof useI18n>["t"]): ColumnDef<Cu
   {
     accessorKey: "sellCash",
     header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      >
+      <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
         购钞价
         <ArrowUpDown className="h-4 w-4" />
       </Button>
@@ -58,10 +52,7 @@ export const columnsFactory = (t: ReturnType<typeof useI18n>["t"]): ColumnDef<Cu
   {
     accessorKey: "buyRemit",
     header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      >
+      <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
         {t("columns.buyRemit")}
         <ArrowUpDown className="h-4 w-4" />
       </Button>
@@ -74,10 +65,7 @@ export const columnsFactory = (t: ReturnType<typeof useI18n>["t"]): ColumnDef<Cu
   {
     accessorKey: "buyCash",
     header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      >
+      <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
         {t("columns.buyCash")}
         <ArrowUpDown className="h-4 w-4" />
       </Button>
@@ -90,10 +78,7 @@ export const columnsFactory = (t: ReturnType<typeof useI18n>["t"]): ColumnDef<Cu
   {
     accessorKey: "middle",
     header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-      >
+      <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
         {t("columns.middle")}
         <ArrowUpDown className="h-4 w-4" />
       </Button>
@@ -123,8 +108,12 @@ export function CurrencyTable() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const validCodes = useMemo(() => new Set(Currencies.map((c) => c.value)), []);
-  const [authenticated, setAuthenticated] = useState(cachedStateRef.current?.authenticated ?? false);
-  const [consentChecked, setConsentChecked] = useState(cachedStateRef.current?.consentChecked ?? false);
+  const [authenticated, setAuthenticated] = useState(
+    cachedStateRef.current?.authenticated ?? false,
+  );
+  const [consentChecked, setConsentChecked] = useState(
+    cachedStateRef.current?.consentChecked ?? false,
+  );
   const [authError, setAuthError] = useState<string | null>(null);
   const { rates, error, loading, refresh } = useFetchRates(fromcurrency, "CNY", authenticated, {
     onAuthExpired: () => {
@@ -142,13 +131,13 @@ export function CurrencyTable() {
       params.set("from", currency);
       params.set("to", tocurrency);
       router.replace(`${pathname}?${params.toString()}`);
-    } catch (_) {}
+    } catch {}
   };
 
   useEffect(() => {
     try {
       router.prefetch("/tos");
-    } catch (_) {}
+    } catch {}
   }, [router]);
 
   useEffect(() => {
@@ -156,7 +145,7 @@ export function CurrencyTable() {
     if (from && validCodes.has(from) && from !== fromcurrency) {
       setFromcurrency(from);
     }
-  }, [searchParams, validCodes]);
+  }, [fromcurrency, searchParams, validCodes]);
 
   useEffect(() => {
     if (!consentChecked) {
@@ -174,13 +163,7 @@ export function CurrencyTable() {
       loading,
       timestamp: Date.now(),
     });
-  }, [
-    fromcurrency,
-    authenticated,
-    consentChecked,
-    rates,
-    loading,
-  ]);
+  }, [fromcurrency, authenticated, consentChecked, rates, loading]);
 
   const columns = columnsFactory(t);
 
@@ -204,16 +187,14 @@ export function CurrencyTable() {
           try {
             const data = await resp.json();
             detail = typeof data?.error === "string" ? data.error : "";
-          } catch (_) {}
+          } catch {}
           const normalized = detail.toLowerCase();
           if (resp.status === 401 || normalized.includes("token invalid")) {
             setAuthError("Invalid Token (ERR-T100)");
           } else if (resp.status === 400) {
             setAuthError(detail || "Missing Token (ERR-T102)");
           } else if (resp.status === 403) {
-            setAuthError(
-              detail || "Captcha Verification Failed (ERR-T103)"
-            );
+            setAuthError(detail || "Captcha Verification Failed (ERR-T103)");
           } else if (resp.status === 500) {
             setAuthError(detail || "Server Misconfigured (ERR-T104)");
           } else {
@@ -223,12 +204,12 @@ export function CurrencyTable() {
           return;
         }
         setAuthenticated(true);
-      } catch (e) {
+      } catch {
         setAuthError("Network Error (ERR-N100)");
         setAuthenticated(false);
       }
     },
-    [tokenField, captchaAuthPath]
+    [tokenField, captchaAuthPath],
   );
 
   return (
@@ -256,7 +237,7 @@ export function CurrencyTable() {
                   onCheckedChange={(checked) => setConsentChecked(Boolean(checked))}
                 />
                 <span>
-                  {t("consent.agreePrefix")} {" "}
+                  {t("consent.agreePrefix")}{" "}
                   <Link href="/tos" className="underline transition-colors hover:text-primary">
                     {t("consent.policy")}
                   </Link>
@@ -270,11 +251,7 @@ export function CurrencyTable() {
               {consentChecked && (
                 <div className="flex flex-col items-center gap-2">
                   <CaptchaWidget onVerify={onVerifyCaptcha} />
-                  {authError && (
-                    <div className="text-red-500 text-xs text-center">
-                      {authError}
-                    </div>
-                  )}
+                  {authError && <div className="text-red-500 text-xs text-center">{authError}</div>}
                 </div>
               )}
             </div>

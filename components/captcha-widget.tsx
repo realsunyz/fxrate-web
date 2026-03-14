@@ -16,7 +16,7 @@ declare global {
           theme?: "auto" | "light" | "dark";
           appearance?: "always" | "execute" | "interaction-only";
           language?: string;
-        }
+        },
       ) => string | undefined;
       reset?: (id?: string) => void;
     };
@@ -30,12 +30,7 @@ type CaptchaWidgetProps = {
   language?: string;
 };
 
-export function CaptchaWidget({
-  onVerify,
-  siteKey,
-  theme = "auto",
-  language,
-}: CaptchaWidgetProps) {
+export function CaptchaWidget({ onVerify, siteKey, theme = "auto", language }: CaptchaWidgetProps) {
   const { locale } = useI18n();
   const containerRef = useRef<HTMLDivElement>(null);
   const idRef = useRef<string | undefined>(undefined);
@@ -44,15 +39,16 @@ export function CaptchaWidget({
 
   useEffect(() => {
     let cancelled = false;
+    const container = containerRef.current;
 
     const tryRender = () => {
-      if (!containerRef.current || !window.turnstile || !resolvedSiteKey) {
+      if (!container || !window.turnstile || !resolvedSiteKey) {
         return;
       }
       try {
-        containerRef.current.innerHTML = "";
-      } catch (_) {}
-      const id = window.turnstile.render(containerRef.current, {
+        container.innerHTML = "";
+      } catch {}
+      const id = window.turnstile.render(container, {
         sitekey: resolvedSiteKey,
         theme,
         language: resolvedLanguage,
@@ -61,9 +57,7 @@ export function CaptchaWidget({
         },
         "error-callback": () => {},
         "expired-callback": () => {
-          window.turnstile?.reset?.(
-            typeof id === "string" ? id : undefined
-          );
+          window.turnstile?.reset?.(typeof id === "string" ? id : undefined);
         },
       });
       idRef.current = typeof id === "string" ? id : undefined;
@@ -90,10 +84,10 @@ export function CaptchaWidget({
             window.turnstile.reset();
           }
         }
-      } catch (_) {}
+      } catch {}
       try {
-        if (containerRef.current) containerRef.current.innerHTML = "";
-      } catch (_) {}
+        if (container) container.innerHTML = "";
+      } catch {}
     };
   }, [resolvedSiteKey, theme, resolvedLanguage, onVerify]);
 
@@ -105,9 +99,7 @@ export function CaptchaWidget({
     );
   }
 
-  return (
-    <div ref={containerRef} className="flex items-center justify-center" />
-  );
+  return <div ref={containerRef} className="flex items-center justify-center" />;
 }
 
 export default CaptchaWidget;

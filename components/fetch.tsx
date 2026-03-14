@@ -1,21 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useI18n } from "@/lib/i18n";
-import {
-  US,
-  CA,
-  HK,
-  EU,
-  GB,
-  JP,
-  KR,
-  SG,
-  RU,
-  CH,
-  AE,
-  TW,
-} from "country-flag-icons/react/3x2";
+import { US, CA, HK, EU, GB, JP, KR, SG, RU, CH, AE, TW } from "country-flag-icons/react/3x2";
 import { API_BASE_PATH } from "@/lib/api";
 
 export const bankMap: { [key: string]: string } = {
@@ -41,10 +28,8 @@ function tzConverter(httpDate: string): string {
   const plus8 = new Date(d.getTime() + 8 * 60 * 60 * 1000);
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${plus8.getUTCFullYear()}-${pad(plus8.getUTCMonth() + 1)}-${pad(
-    plus8.getUTCDate()
-  )} ${pad(plus8.getUTCHours())}:${pad(plus8.getUTCMinutes())}:${pad(
-    plus8.getUTCSeconds()
-  )}`;
+    plus8.getUTCDate(),
+  )} ${pad(plus8.getUTCHours())}:${pad(plus8.getUTCMinutes())}:${pad(plus8.getUTCSeconds())}`;
 }
 
 export type CurrencyOption = {
@@ -90,94 +75,143 @@ const useFetchRates = (
   fromCurrency: string,
   toCurrency: string,
   authenticated?: boolean,
-  options?: FetchOptions
+  options?: FetchOptions,
 ) => {
   const { t } = useI18n();
-  const [rates, setRates] = useState<CurrencyData[]>(() => options?.initialRates ?? []);
-  const [error, setError] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(() => !(options?.initialRates && options.initialRates.length > 0));
-  const preserveInitialDataRef = useRef(Boolean(options?.preserveInitialData));
+  const onAuthExpired = options?.onAuthExpired;
   const latestOnRatesChange = options?.onRatesChange;
-  const fetchAll = (withRefresh: boolean) => {
-    if (!authenticated) {
-      setRates([]);
-      setLoading(true);
-      return;
-    }
+  const [rates, setRates] = useState<CurrencyData[]>(() => options?.initialRates ?? []);
+  const [loading, setLoading] = useState<boolean>(
+    () => !(options?.initialRates && options.initialRates.length > 0),
+  );
+  const preserveInitialDataRef = useRef(Boolean(options?.preserveInitialData));
+  const ratesRef = useRef(rates);
 
-    const bankNames = Object.keys(bankMap);
-    const shouldPreserveExisting = preserveInitialDataRef.current && !withRefresh && rates.length > 0;
-    if (shouldPreserveExisting) {
-      preserveInitialDataRef.current = false;
-    }
+  useEffect(() => {
+    ratesRef.current = rates;
+  }, [rates]);
 
-    if (!shouldPreserveExisting) {
-      const initialRates: CurrencyData[] = bankNames.map((bank) => ({
-        bank,
-        sellRemit: null,
-        sellCash: null,
-        buyRemit: null,
-        buyCash: null,
-        middle: null,
-        updated: null,
-        hidden: false,
-      }));
-      setRates(initialRates);
-    }
-
-    setLoading(true);
-    let loadedCount = 0;
-    let expiredHandled = false;
-    const handleExpired = () => {
-      if (expiredHandled) return;
-      expiredHandled = true;
-      options?.onAuthExpired?.();
-    };
-    const handleInvalidThenReload = () => {
-      if (expiredHandled) return;
-      expiredHandled = true;
-      if (typeof window !== "undefined") {
-        window.location.reload();
+  const fetchAll = useCallback(
+    (withRefresh: boolean) => {
+      if (!authenticated) {
+        setRates([]);
+        setLoading(true);
+        return;
       }
-    };
-    const includesInvalidToken = (msg: unknown) =>
-      typeof msg === "string" && msg.toLowerCase().includes("token invalid");
-    const refreshQuery = withRefresh ? "&refresh=true" : "";
-    bankNames.forEach((bankName) => {
-      const bankCode = bankMap[bankName];
-      fetch(
-        `${API_BASE_PATH}/${bankCode}/${fromCurrency}/${toCurrency}?precision=2&amount=100&fees=0${refreshQuery}`,
-        {
-          credentials: "include",
+
+      const bankNames = Object.keys(bankMap);
+      const shouldPreserveExisting =
+        preserveInitialDataRef.current && !withRefresh && ratesRef.current.length > 0;
+      if (shouldPreserveExisting) {
+        preserveInitialDataRef.current = false;
+      }
+
+      if (!shouldPreserveExisting) {
+        const initialRates: CurrencyData[] = bankNames.map((bank) => ({
+          bank,
+          sellRemit: null,
+          sellCash: null,
+          buyRemit: null,
+          buyCash: null,
+          middle: null,
+          updated: null,
+          hidden: false,
+        }));
+        setRates(initialRates);
+      }
+
+      setLoading(true);
+      let loadedCount = 0;
+      let expiredHandled = false;
+      const handleExpired = () => {
+        if (expiredHandled) return;
+        expiredHandled = true;
+        onAuthExpired?.();
+      };
+      const handleInvalidThenReload = () => {
+        if (expiredHandled) return;
+        expiredHandled = true;
+        if (typeof window !== "undefined") {
+          window.location.reload();
         }
-      )
-        .then(async (response) => {
-          let data: any = null;
-          try {
-            data = await response.json();
-          } catch (_) {}
-          if (data) {
-            if ((response.status === 401 || response.status === 403) && includesInvalidToken(data.error)) {
-              handleInvalidThenReload();
+      };
+      const includesInvalidToken = (msg: unknown) =>
+        typeof msg === "string" && msg.toLowerCase().includes("token invalid");
+      const refreshQuery = withRefresh ? "&refresh=true" : "";
+      bankNames.forEach((bankName) => {
+        const bankCode = bankMap[bankName];
+        fetch(
+          `${API_BASE_PATH}/${bankCode}/${fromCurrency}/${toCurrency}?precision=2&amount=100&fees=0${refreshQuery}`,
+          {
+            credentials: "include",
+          },
+        )
+          .then(async (response) => {
+            let data: any = null;
+            try {
+              data = await response.json();
+            } catch {}
+            if (data) {
+              if (
+                (response.status === 401 || response.status === 403) &&
+                includesInvalidToken(data.error)
+              ) {
+                handleInvalidThenReload();
+                return;
+              }
+              if (
+                response.status === 403 &&
+                typeof data.error === "string" &&
+                data.error.toLowerCase().includes("token expired")
+              ) {
+                handleExpired();
+                return;
+              }
+            }
+            if (!response.ok) {
+              throw new Error(`HTTP ERROR: ${response.status}`);
+            }
+            return data;
+          })
+          .then((data) => {
+            if (!data) return;
+            if (data?.success === false) {
+              setRates((prevRates) =>
+                prevRates.map((item) =>
+                  item.bank === bankName
+                    ? {
+                        ...item,
+                        buyRemit: 0,
+                        buyCash: 0,
+                        sellRemit: 0,
+                        sellCash: 0,
+                        middle: 0,
+                        updated: t("table.unavailable"),
+                      }
+                    : item,
+                ),
+              );
               return;
             }
-            if (
-              response.status === 403 &&
-              typeof data.error === "string" &&
-              data.error.toLowerCase().includes("token expired")
-            ) {
-              handleExpired();
-              return;
-            }
-          }
-          if (!response.ok) {
-            throw new Error(`HTTP ERROR: ${response.status}`);
-          }
-          return data;
-        })
-        .then((data) => {
-          if (!data) return;
-          if (data?.success === false) {
+
+            const shouldHide =
+              data?.provided === false && data?.updated === "Thu, Jan 01 1970 00:00:00 GMT";
+            setRates((prevRates) =>
+              prevRates.map((item) =>
+                item.bank === bankName
+                  ? {
+                      ...item,
+                      buyRemit: data.remit,
+                      buyCash: data.cash,
+                      middle: data.middle,
+                      updated: tzConverter(data.updated),
+                      hidden: item.hidden || Boolean(shouldHide),
+                    }
+                  : item,
+              ),
+            );
+          })
+          .catch(() => {
             setRates((prevRates) =>
               prevRates.map((item) =>
                 item.bank === bankName
@@ -185,89 +219,85 @@ const useFetchRates = (
                       ...item,
                       buyRemit: 0,
                       buyCash: 0,
-                      sellRemit: 0,
-                      sellCash: 0,
                       middle: 0,
-                      updated: t("table.unavailable"),
+                      updated: t("table.loading"),
                     }
-                  : item
-              )
+                  : item,
+              ),
             );
-            return;
-          }
+          })
+          .finally(() => {
+            loadedCount++;
+            if (loadedCount === bankNames.length) {
+              setLoading(false);
+            }
+          });
+        fetch(
+          `${API_BASE_PATH}/${bankCode}/${toCurrency}/${fromCurrency}?reverse=true&precision=2&amount=100&fees=0${refreshQuery}`,
+          {
+            credentials: "include",
+          },
+        )
+          .then(async (response) => {
+            let data: any = null;
+            try {
+              data = await response.json();
+            } catch {}
+            if (data) {
+              if (
+                (response.status === 401 || response.status === 403) &&
+                includesInvalidToken(data.error)
+              ) {
+                handleInvalidThenReload();
+                return;
+              }
+              if (
+                response.status === 403 &&
+                typeof data.error === "string" &&
+                data.error.toLowerCase().includes("token expired")
+              ) {
+                handleExpired();
+                return;
+              }
+            }
+            if (!response.ok) {
+              throw new Error(`HTTP ERROR: ${response.status}`);
+            }
+            return data;
+          })
+          .then((data) => {
+            if (!data) return;
+            if (data?.success === false) {
+              setRates((prevRates) =>
+                prevRates.map((item) =>
+                  item.bank === bankName
+                    ? {
+                        ...item,
+                        sellRemit: 0,
+                        sellCash: 0,
+                      }
+                    : item,
+                ),
+              );
+              return;
+            }
 
-          const shouldHide =
-            data?.provided === false &&
-            data?.updated === "Thu, Jan 01 1970 00:00:00 GMT";
-          setRates((prevRates) =>
-            prevRates.map((item) =>
-              item.bank === bankName
-                ? {
-                    ...item,
-                    buyRemit: data.remit,
-                    buyCash: data.cash,
-                    middle: data.middle,
-                    updated: tzConverter(data.updated),
-                    hidden: item.hidden || Boolean(shouldHide),
-                  }
-                : item
-            )
-          );
-        })
-        .catch((err) => {
-          setRates((prevRates) =>
-            prevRates.map((item) =>
-              item.bank === bankName
-                ? {
-                    ...item,
-                    buyRemit: 0,
-                    buyCash: 0,
-                    middle: 0,
-                    updated: t("table.loading"),
-                  }
-                : item
-            )
-          );
-        })
-        .finally(() => {
-          loadedCount++;
-          if (loadedCount === bankNames.length) {
-            setLoading(false);
-          }
-        });
-      fetch(
-        `${API_BASE_PATH}/${bankCode}/${toCurrency}/${fromCurrency}?reverse=true&precision=2&amount=100&fees=0${refreshQuery}`,
-        {
-          credentials: "include",
-        }
-      )
-        .then(async (response) => {
-          let data: any = null;
-          try {
-            data = await response.json();
-          } catch (_) {}
-          if (data) {
-            if ((response.status === 401 || response.status === 403) && includesInvalidToken(data.error)) {
-              handleInvalidThenReload();
-              return;
-            }
-            if (
-              response.status === 403 &&
-              typeof data.error === "string" &&
-              data.error.toLowerCase().includes("token expired")
-            ) {
-              handleExpired();
-              return;
-            }
-          }
-          if (!response.ok) {
-            throw new Error(`HTTP ERROR: ${response.status}`);
-          }
-          return data;
-        })
-        .then((data) => {
-          if (!data) return;
-          if (data?.success === false) {
+            const shouldHide =
+              data?.provided === false && data?.updated === "Thu, Jan 01 1970 00:00:00 GMT";
+            setRates((prevRates) =>
+              prevRates.map((item) =>
+                item.bank === bankName
+                  ? {
+                      ...item,
+                      sellRemit: data.remit,
+                      sellCash: data.cash,
+                      hidden: item.hidden || Boolean(shouldHide),
+                    }
+                  : item,
+              ),
+            );
+          })
+          .catch(() => {
             setRates((prevRates) =>
               prevRates.map((item) =>
                 item.bank === bankName
@@ -276,47 +306,18 @@ const useFetchRates = (
                       sellRemit: 0,
                       sellCash: 0,
                     }
-                  : item
-              )
+                  : item,
+              ),
             );
-            return;
-          }
-
-          const shouldHide =
-            data?.provided === false &&
-            data?.updated === "Thu, Jan 01 1970 00:00:00 GMT";
-          setRates((prevRates) =>
-            prevRates.map((item) =>
-              item.bank === bankName
-                ? {
-                    ...item,
-                    sellRemit: data.remit,
-                    sellCash: data.cash,
-                    hidden: item.hidden || Boolean(shouldHide),
-                  }
-                : item
-            )
-          );
-        })
-        .catch((err) => {
-          setRates((prevRates) =>
-            prevRates.map((item) =>
-              item.bank === bankName
-                ? {
-                    ...item,
-                    sellRemit: 0,
-                    sellCash: 0,
-                  }
-                : item
-            )
-          );
-        });
-    });
-  };
+          });
+      });
+    },
+    [authenticated, fromCurrency, onAuthExpired, t, toCurrency],
+  );
 
   useEffect(() => {
     fetchAll(false);
-  }, [fromCurrency, toCurrency, authenticated]);
+  }, [fetchAll]);
 
   useEffect(() => {
     latestOnRatesChange?.(rates, loading);
@@ -324,7 +325,7 @@ const useFetchRates = (
 
   const refresh = () => fetchAll(true);
 
-  return { rates: rates.filter((r) => !r.hidden), error, loading, refresh };
+  return { rates: rates.filter((r) => !r.hidden), error: "", loading, refresh };
 };
 
 export default useFetchRates;

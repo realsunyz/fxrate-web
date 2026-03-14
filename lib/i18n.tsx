@@ -22,9 +22,12 @@ const dictionaries: Dictionaries = {
     "help.title": "帮助",
     "help.description": "您可能需要的信息和设置",
     "help.info.title": "信息",
-    "help.info.line1": "“兴业寰宇”指由兴业银行发行的“寰宇人生卡”，持卡人可享受结汇购汇交易费率5折优惠。",
-    "help.info.line2": "“银联国际”为卡组织汇率，仅适用于使用该卡组织所发行银行卡进行的外币交易，不可手动购汇购钞。",
-    "help.info.line3": "点击货币选择栏右侧的刷新按钮可强制更新各银行汇率。为保证服务稳定，请勿频繁点击。",
+    "help.info.line1":
+      "“兴业寰宇”指由兴业银行发行的“寰宇人生卡”，持卡人可享受结汇购汇交易费率5折优惠。",
+    "help.info.line2":
+      "“银联国际”为卡组织汇率，仅适用于使用该卡组织所发行银行卡进行的外币交易，不可手动购汇购钞。",
+    "help.info.line3":
+      "点击货币选择栏右侧的刷新按钮可强制更新各银行汇率。为保证服务稳定，请勿频繁点击。",
     // Footer
     "footer.build": "fxRate Web (v{{version}}-{{id}})",
     "footer.copyright": "版权所有 © 2025 Yanzheng Sun。保留所有权利。",
@@ -86,9 +89,12 @@ const dictionaries: Dictionaries = {
     "help.title": "Help",
     "help.description": "Information and Settings you may need",
     "help.info.title": "Info",
-    "help.info.line1": "\"CIB HY\" refers to \"Huanyu Life Card\" issued by China Industrial Bank. Cardholders are entitled to a 50% discount on conversion fees for foreign exchange purchases and settlements.",
-    "help.info.line2": "\"UnionPay\" and \"VISA\" refers to exchange rates published by the respective card associations. These rates apply only to foreign currency transactions conducted with cards issued by the corresponding card association.",
-    "help.info.line3": "Click the refresh button next to the currency selector to force-update rates. To keep the service stable, please avoid frequent clicks.",
+    "help.info.line1":
+      '"CIB HY" refers to "Huanyu Life Card" issued by China Industrial Bank. Cardholders are entitled to a 50% discount on conversion fees for foreign exchange purchases and settlements.',
+    "help.info.line2":
+      '"UnionPay" and "VISA" refers to exchange rates published by the respective card associations. These rates apply only to foreign currency transactions conducted with cards issued by the corresponding card association.',
+    "help.info.line3":
+      "Click the refresh button next to the currency selector to force-update rates. To keep the service stable, please avoid frequent clicks.",
     // Footer
     "footer.build": "fxRate Web (v{{version}}-{{id}})",
     "footer.copyright": "Copyright © 2025 Yanzheng Sun. All rights reserved.",
@@ -173,7 +179,10 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     return (key: string, params?: Record<string, string | number>) => {
       const template = dict[key] ?? key;
       if (!params) return template;
-      return Object.keys(params).reduce((acc, k) => acc.replaceAll(`{{${k}}}`, String(params[k])), template);
+      return Object.keys(params).reduce(
+        (acc, k) => acc.replaceAll(`{{${k}}}`, String(params[k])),
+        template,
+      );
     };
   }, [locale]);
 

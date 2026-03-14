@@ -11,17 +11,15 @@ const withMDX = createMDX({
 function resolveCommitId(): string {
   try {
     const fromEnv =
-      process.env.GIT_HASH ||
-      process.env.VERCEL_GIT_COMMIT_SHA ||
-      process.env.COMMIT_ID;
+      process.env.GIT_HASH || process.env.VERCEL_GIT_COMMIT_SHA || process.env.COMMIT_ID;
     if (fromEnv && fromEnv.trim()) return fromEnv.trim().slice(0, 7);
     return execSync("git rev-parse --short HEAD").toString().trim();
-  } catch (e) {
+  } catch {
     return "dev";
   }
 }
 
-const cspHeader = `
+const _cspHeader = `
     default-src 'self';
     script-src 'self' 'unsafe-inline' https://cdn.sunyz.net https://analytics.sunyz.net https://challenges.cloudflare.com;
     style-src 'self' 'unsafe-inline' https://cdn.sunyz.net https://fonts.googleapis.com https://challenges.cloudflare.com;

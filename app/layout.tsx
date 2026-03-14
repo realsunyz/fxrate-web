@@ -65,11 +65,7 @@ export default function RootLayout({
     <html lang="zh-Hans" suppressHydrationWarning>
       <head>
         <Script src="https://cdn.sunyz.net/assets/fxrate/themeScript.js" />
-        <script
-          src="https://challenges.cloudflare.com/turnstile/v0/api.js"
-          async
-          defer
-        ></script>
+        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
       </head>
       <body className={cn("bg-background antialiased", PingFangSC)}>
         <I18nProvider>

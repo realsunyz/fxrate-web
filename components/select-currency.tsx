@@ -13,11 +13,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useI18n, tCurrency } from "@/lib/i18n";
 
 type SelectProps = {
@@ -30,8 +26,14 @@ type SelectProps = {
 
 type RefreshState = "idle" | "loading" | "success";
 
-export function SelectCurrency({ onSelect, disabled = false, onRefresh, value: controlledValue, refreshing = false }: SelectProps) {
-  const { t, locale } = useI18n();
+export function SelectCurrency({
+  onSelect,
+  disabled = false,
+  onRefresh,
+  value: controlledValue,
+  refreshing = false,
+}: SelectProps) {
+  const { t } = useI18n();
   const [open, setOpen] = React.useState(false);
   const [value, setValue] = React.useState(controlledValue || "");
   const [refreshState, setRefreshState] = React.useState<RefreshState>("idle");
@@ -122,7 +124,7 @@ export function SelectCurrency({ onSelect, disabled = false, onRefresh, value: c
                       <Check
                         className={cn(
                           "ml-auto",
-                          value === item.value ? "opacity-100" : "opacity-0"
+                          value === item.value ? "opacity-100" : "opacity-0",
                         )}
                       />
                     </CommandItem>
@@ -153,30 +155,21 @@ export function SelectCurrency({ onSelect, disabled = false, onRefresh, value: c
           data-state={refreshState}
           className={cn(
             "relative overflow-hidden transition-colors duration-300 ease-out",
-            refreshState === "success" ? "text-emerald-500" : undefined
+            refreshState === "success" ? "text-emerald-500" : undefined,
           )}
         >
           <span
             className={cn(
               "absolute inset-0 flex items-center justify-center transition-all duration-300 ease-out",
-              refreshState === "success"
-                ? "opacity-0 scale-80"
-                : "opacity-100 scale-100"
+              refreshState === "success" ? "opacity-0 scale-80" : "opacity-100 scale-100",
             )}
           >
-            <RefreshCw
-              className={cn(
-                "h-4 w-4",
-                refreshState === "loading" && "animate-spin"
-              )}
-            />
+            <RefreshCw className={cn("h-4 w-4", refreshState === "loading" && "animate-spin")} />
           </span>
           <span
             className={cn(
               "absolute inset-0 flex items-center justify-center transition-all duration-300 ease-out",
-              refreshState === "success"
-                ? "opacity-100 scale-100"
-                : "opacity-0 scale-90"
+              refreshState === "success" ? "opacity-100 scale-100" : "opacity-0 scale-90",
             )}
           >
             <Check />
