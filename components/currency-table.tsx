@@ -124,14 +124,8 @@ export function CurrencyTable() {
   const searchParams = useSearchParams();
   const validCodes = useMemo(() => new Set(Currencies.map((c) => c.value)), []);
   const [authenticated, setAuthenticated] = useState(cachedStateRef.current?.authenticated ?? false);
-  const [bypassAttempted, setBypassAttempted] = useState(cachedStateRef.current?.bypassAttempted ?? false);
-  const [bypassEligible, setBypassEligible] = useState(cachedStateRef.current?.bypassEligible ?? false);
   const [consentChecked, setConsentChecked] = useState(cachedStateRef.current?.consentChecked ?? false);
-  const [bypassMeta, setBypassMeta] = useState<
-    { countryEligible: boolean; uaEligible: boolean } | null
-  >(cachedStateRef.current?.bypassMeta ?? null);
   const [authError, setAuthError] = useState<string | null>(null);
-  const [bypassInFlight, setBypassInFlight] = useState(false);
   const { rates, error, loading, refresh } = useFetchRates(fromcurrency, "CNY", authenticated, {
     onAuthExpired: () => {
       setAuthenticated(false);
@@ -167,10 +161,6 @@ export function CurrencyTable() {
   useEffect(() => {
     if (!consentChecked) {
       setAuthenticated(false);
-      setBypassEligible(false);
-      setBypassAttempted(false);
-      setBypassMeta(null);
-      setBypassInFlight(false);
       setAuthError(null);
     }
   }, [consentChecked]);
@@ -180,9 +170,6 @@ export function CurrencyTable() {
       fromCurrency: fromcurrency,
       authenticated,
       consentChecked,
-      bypassEligible,
-      bypassAttempted,
-      bypassMeta,
       rates,
       loading,
       timestamp: Date.now(),
@@ -191,9 +178,6 @@ export function CurrencyTable() {
     fromcurrency,
     authenticated,
     consentChecked,
-    bypassEligible,
-    bypassAttempted,
-    bypassMeta,
     rates,
     loading,
   ]);
@@ -247,89 +231,6 @@ export function CurrencyTable() {
     [tokenField, captchaAuthPath]
   );
 
-  useEffect(() => {
-    if (!bypassEligible) {
-      return;
-    }
-
-    let timer: ReturnType<typeof setTimeout> | undefined;
-
-    if (consentChecked) {
-      timer = setTimeout(() => {
-        setAuthenticated(true);
-      }, 1000);
-    } else {
-      setAuthenticated(false);
-    }
-
-    return () => {
-      if (timer) clearTimeout(timer);
-    };
-  }, [bypassEligible, consentChecked]);
-
-  useEffect(() => {
-    if (!consentChecked || authenticated || bypassAttempted) {
-      return;
-    }
-
-    let cancelled = false;
-
-    const tryBypass = async () => {
-      if (cancelled) return;
-      setBypassInFlight(true);
-      try {
-        const resp = await fetch("/api/bypass", {
-          method: "GET",
-          credentials: "include",
-          cache: "no-store",
-        });
-        const data = await resp.json().catch(() => null);
-        if (cancelled) return;
-
-        const forwarded = Boolean(data?.forwarded);
-        const meta = {
-          countryEligible: Boolean(data?.countryEligible),
-          uaEligible: Boolean(data?.uaEligible),
-        };
-        if (resp.ok && forwarded && data?.eligible) {
-          setAuthError(null);
-          setBypassEligible(true);
-          setBypassMeta(meta);
-          return;
-        }
-
-        setBypassEligible(false);
-        setBypassMeta(null);
-        if (resp.ok && data?.eligible && data?.backendError) {
-          setAuthError(String(data.backendError));
-        } else if (!resp.ok) {
-          const errorMessage =
-            typeof data?.error === "string"
-              ? data.error
-              : `Bypass Failed (ERR-B${resp.status})`;
-          setAuthError(errorMessage);
-        }
-      } catch (_) {
-        if (!cancelled) {
-          setAuthError((prev) => prev || "Bypass Failed (ERR-B101)");
-          setBypassEligible(false);
-          setBypassMeta(null);
-        }
-      } finally {
-        if (!cancelled) {
-          setBypassAttempted(true);
-          setBypassInFlight(false);
-        }
-      }
-    };
-
-    tryBypass();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [authenticated, bypassAttempted, consentChecked]);
-
   return (
     <>
       <SelectCurrency
@@ -368,23 +269,7 @@ export function CurrencyTable() {
               )}
               {consentChecked && (
                 <div className="flex flex-col items-center gap-2">
-                  {bypassInFlight && (
-                    <div className="text-center text-xs text-muted-foreground">
-                      {t("consent.bypassPending")}
-                    </div>
-                  )}
-                  {bypassEligible && !bypassInFlight && (
-                    <div className="text-center text-xs text-muted-foreground">
-                      {t(
-                        (bypassMeta?.uaEligible
-                          ? "consent.bypassUA"
-                          : "consent.bypassCountry") as string
-                      )}
-                    </div>
-                  )}
-                  {!bypassEligible && !bypassInFlight && bypassAttempted && (
-                    <CaptchaWidget onVerify={onVerifyCaptcha} />
-                  )}
+                  <CaptchaWidget onVerify={onVerifyCaptcha} />
                   {authError && (
                     <div className="text-red-500 text-xs text-center">
                       {authError}

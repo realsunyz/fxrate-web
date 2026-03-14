@@ -2,6 +2,9 @@
 
 A Next.js frontend for [fxRate](https://github.com/realsunyz/fxrate).
 
+This app lets users compare foreign-exchange rates from Chinese banks and card networks in a simple web interface.
+It is built with Next.js App Router, talks to the standalone `fxRate` backend, and uses Cloudflare Turnstile for captcha protection.
+
 ## Quick Start
 
 ### Prerequisites
@@ -24,6 +27,4 @@ pnpm dev
 | Variable | Default | Description |
 | --- | --- | --- |
 | `NEXT_PUBLIC_FXRATE_API` | `http://localhost:8080` | fxRate backend URL |
-| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | — | Turnstile Sitekey |
-| `AUTH_BYPASS_KEY_ID` | — | RS256 Key ID |
-| `AUTH_BYPASS_PRIVATE_KEY` | — | RS256 Private Key |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | — | Turnstile site key |
