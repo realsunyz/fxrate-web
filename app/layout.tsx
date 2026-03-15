@@ -3,7 +3,6 @@ import { cn } from "@/lib/utils";
 import type { Metadata, Viewport } from "next";
 import { cookies, headers } from "next/headers";
 import localFont from "next/font/local";
-import Script from "next/script";
 import { siteConfig, META_THEME_COLORS } from "@/config/site";
 import { ThemeProvider } from "@/components/theme-provider";
 import { I18nProvider } from "@/lib/i18n";
@@ -73,7 +72,6 @@ export default async function RootLayout({
   return (
     <html lang={HTML_LANG_BY_LOCALE[locale]} suppressHydrationWarning>
       <head>
-        <Script src="https://cdn.sunyz.net/assets/fxrate/themeScript.js" />
         <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
       </head>
       <body className={cn("bg-background antialiased", PingFangSC)}>
