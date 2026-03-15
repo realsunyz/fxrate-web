@@ -1,11 +1,13 @@
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import type { Metadata, Viewport } from "next";
+import { cookies, headers } from "next/headers";
 import localFont from "next/font/local";
 import Script from "next/script";
 import { siteConfig, META_THEME_COLORS } from "@/config/site";
 import { ThemeProvider } from "@/components/theme-provider";
 import { I18nProvider } from "@/lib/i18n";
+import { HTML_LANG_BY_LOCALE, LOCALE_COOKIE_NAME, resolveLocale } from "@/lib/i18n-config";
 import { Footer } from "@/components/footer";
 import { NavBar } from "@/components/navbar";
 import { ThemeSync } from "@/components/theme-sync";
@@ -56,19 +58,26 @@ export const viewport: Viewport = {
   themeColor: META_THEME_COLORS.light,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const headerStore = await headers();
+  const locale = resolveLocale({
+    cookieLocale: cookieStore.get(LOCALE_COOKIE_NAME)?.value,
+    acceptLanguage: headerStore.get("accept-language"),
+  });
+
   return (
-    <html lang="zh-Hans" suppressHydrationWarning>
+    <html lang={HTML_LANG_BY_LOCALE[locale]} suppressHydrationWarning>
       <head>
         <Script src="https://cdn.sunyz.net/assets/fxrate/themeScript.js" />
         <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
       </head>
       <body className={cn("bg-background antialiased", PingFangSC)}>
-        <I18nProvider>
+        <I18nProvider initialLocale={locale}>
           <ThemeProvider
             attribute="class"
             defaultTheme="system"

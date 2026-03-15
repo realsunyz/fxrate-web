@@ -1,8 +1,14 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
-
-export type Locale = "zh" | "en";
+import {
+  type Locale,
+  DEFAULT_LOCALE,
+  HTML_LANG_BY_LOCALE,
+  LOCALE_COOKIE_MAX_AGE,
+  LOCALE_COOKIE_NAME,
+  normalizeLocale,
+} from "@/lib/i18n-config";
 
 type Dict = Record<string, string>;
 
@@ -156,22 +162,32 @@ type I18nContextValue = {
 
 const I18nContext = createContext<I18nContextValue | null>(null);
 
-export function I18nProvider({ children }: { children: React.ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>("zh");
+export function I18nProvider({
+  children,
+  initialLocale = DEFAULT_LOCALE,
+}: {
+  children: React.ReactNode;
+  initialLocale?: Locale;
+}) {
+  const [locale, setLocaleState] = useState<Locale>(initialLocale);
 
   useEffect(() => {
-    const saved = typeof window !== "undefined" ? window.localStorage.getItem("locale") : null;
-    if (saved === "zh" || saved === "en") {
-      setLocaleState(saved);
-    }
-  }, []);
+    const cookieLocale = readLocaleCookie();
+    const detectedLocale = detectNavigatorLocale();
+    const nextLocale = cookieLocale ?? detectedLocale;
 
-  const setLocale = (l: Locale) => {
-    setLocaleState(l);
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem("locale", l);
-      document.documentElement.lang = l === "zh" ? "zh-Hans" : "en";
+    if (nextLocale && nextLocale !== locale) {
+      setLocaleState(nextLocale);
     }
+  }, [locale]);
+
+  useEffect(() => {
+    document.documentElement.lang = HTML_LANG_BY_LOCALE[locale];
+  }, [locale]);
+
+  const setLocale = (nextLocale: Locale) => {
+    setLocaleState(nextLocale);
+    persistLocaleCookie(nextLocale);
   };
 
   const t = useMemo(() => {
@@ -203,4 +219,34 @@ export function tCurrency(code: string, t: I18nContextValue["t"]) {
 
 export function tBankName(nameInChinese: string, t: I18nContextValue["t"]) {
   return t(`bank.${nameInChinese}`);
+}
+
+function readLocaleCookie(): Locale | null {
+  if (typeof document === "undefined") return null;
+
+  const value = document.cookie
+    .split("; ")
+    .find((entry) => entry.startsWith(`${LOCALE_COOKIE_NAME}=`))
+    ?.split("=")[1];
+
+  return normalizeLocale(value ? decodeURIComponent(value) : null);
+}
+
+function detectNavigatorLocale(): Locale | null {
+  if (typeof navigator === "undefined") return null;
+
+  for (const candidate of navigator.languages ?? [navigator.language]) {
+    const locale = normalizeLocale(candidate);
+    if (locale) return locale;
+  }
+
+  return normalizeLocale(navigator.language);
+}
+
+function persistLocaleCookie(locale: Locale) {
+  if (typeof document === "undefined") return;
+
+  const secure =
+    typeof window !== "undefined" && window.location.protocol === "https:" ? "; Secure" : "";
+  document.cookie = `${LOCALE_COOKIE_NAME}=${encodeURIComponent(locale)}; Path=/; Max-Age=${LOCALE_COOKIE_MAX_AGE}; SameSite=Lax${secure}`;
 }

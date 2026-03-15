@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useI18n, type Locale } from "@/lib/i18n";
+import { useI18n } from "@/lib/i18n";
+import type { Locale } from "@/lib/i18n-config";
 import TosEn from "./tos.en.mdx";
 import TosZh from "./tos.zh.mdx";
 
